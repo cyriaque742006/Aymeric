@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizz Départements - Aymeric</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --warning: #f39c12;
+            --bg: #f0f3f5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        #timer-container {
+            width: 100%;
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        #timer-bar {
+            width: 100%;
+            height: 100%;
+            background: var(--success);
+            transition: width 0.1s linear;
+        }
+
+        h1 { color: var(--primary); font-size: 1.5rem; margin-top: 0; }
+        .stats { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; color: var(--secondary); }
+        .question-box { font-size: 1.2rem; font-weight: 600; margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border: 2px solid #eee; border-radius: 15px; padding: 15px; }
+        .options { display: grid; gap: 12px; }
+
+        button { padding: 18px; font-size: 1.1rem; border: 2px solid var(--secondary); background: white; color: var(--secondary); border-radius: 12px; cursor: pointer; font-weight: 600; touch-action: manipulation; }
+        .btn-main { background: var(--secondary); color: white; border: none; width: 100%; margin-top: 20px; }
+        .btn-reset { background: transparent; border: 1px solid #ccc; color: #999; font-size: 0.8rem; padding: 8px 15px; margin-top: 30px; width: auto; }
+
+        .correct { background: var(--success) !important; color: white; border-color: var(--success); }
+        .wrong { background: var(--error) !important; color: white; border-color: var(--error); }
+        .hidden { display: none; }
+        .reward { background: #fff3cd; padding: 15px; border-radius: 10px; border: 2px dashed var(--warning); font-weight: bold; color: #856404; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="home-screen">
+        <h1>Bienvenue Aymerico !</h1>
+        <p>Voici de quoi réviser tes départements pour être le meilleur de l'<b>ENC</b> !</p>
+        <p>⚠️ <b>5 secondes</b> par question !</p>
+        <button class="btn-main" onclick="startGame()">Commencer le test</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div class="stats">
+            <span id="progress">1 / 20</span>
+            <span id="score-display">Score: 0</span>
+        </div>
+        <div id="timer-container"><div id="timer-bar"></div></div>
+        <div class="question-box" id="question-text"></div>
+        <div class="options" id="options-container"></div>
+        <button class="btn-reset" onclick="resetToHome()">↻ Retour à l'accueil</button>
+    </div>
+
+    <div id="result-screen" class="hidden">
+        <div id="result-content"></div>
+        <button class="btn-main" onclick="resetToHome()">Recommencer</button>
+    </div>
+</div>
+
+<script>
+    const departements = [
+        {num:"01",nom:"Ain"},{num:"02",nom:"Aisne"},{num:"03",nom:"Allier"},{num:"04",nom:"Alpes-de-Haute-Provence"},{num:"05",nom:"Hautes-Alpes"},{num:"06",nom:"Alpes-Maritimes"},{num:"07",nom:"Ardèche"},{num:"08",nom:"Ardennes"},{num:"09",nom:"Ariège"},{num:"10",nom:"Aube"},
+        {num:"11",nom:"Aude"},{num:"12",nom:"Aveyron"},{num:"13",nom:"Bouches-du-Rhône"},{num:"14",nom:"Calvados"},{num:"15",nom:"Cantal"},{num:"16",nom:"Charente"},{num:"17",nom:"Charente-Maritime"},{num:"18",nom:"Cher"},{num:"19",nom:"Corrèze"},{num:"2A",nom:"Corse-du-Sud"},
+        {num:"2B",nom:"Haute-Corse"},{num:"21",nom:"Côte-d'Or"},{num:"22",nom:"Côtes-d'Armor"},{num:"23",nom:"Creuse"},{num:"24",nom:"Dordogne"},{num:"25",nom:"Doubs"},{num:"26",nom:"Drôme"},{num:"27",nom:"Eure"},{num:"28",nom:"Eure-et-Loir"},{num:"29",nom:"Finistère"},
+        {num:"30",nom:"Gard"},{num:"31",nom:"Haute-Garonne"},{num:"32",nom:"Gers"},{num:"33",nom:"Gironde"},{num:"34",nom:"Hérault"},{num:"35",nom:"Ille-et-Vilaine"},{num:"36",nom:"Indre"},{num:"37",nom:"Indre-et-Loire"},{num:"38",nom:"Isère"},{num:"39",nom:"Jura"},
+        {num:"40",nom:"Landes"},{num:"41",nom:"Loir-et-Cher"},{num:"42",nom:"Loire"},{num:"43",nom:"Haute-Loire"},{num:"44",nom:"Loire-Atlantique"},{num:"45",nom:"Loiret"},{num:"46",nom:"Lot"},{num:"47",nom:"Lot-et-Garonne"},{num:"48",nom:"Lozère"},{num:"49",nom:"Maine-et-Loire"},
+        {num:"50",nom:"Manche"},{num:"51",nom:"Marne"},{num:"52",nom:"Haute-Marne"},{num:"53",nom:"Mayenne"},{num:"54",nom:"Meurthe-et-Moselle"},{num:"55",nom:"Meuse"},{num:"56",nom:"Morbihan"},{num:"57",nom:"Moselle"},{num:"58",nom:"Nièvre"},{num:"59",nom:"Nord"},
+        {num:"60",nom:"Oise"},{num:"61",nom:"Orne"},{num:"62",nom:"Pas-de-Calais"},{num:"63",nom:"Puy-de-Dôme"},{num:"64",nom:"Pyrénées-Atlantiques"},{num:"65",nom:"Hautes-Pyrénées"},{num:"66",nom:"Pyrénées-Orientales"},{num:"67",nom:"Bas-Rhin"},{num:"68",nom:"Haut-Rhin"},{num:"69",nom:"Rhône"},
+        {num:"70",nom:"Haute-Saône"},{num:"71",nom:"Saône-et-Loire"},{num:"72",nom:"Sarthe"},{num:"73",nom:"Savoie"},{num:"74",nom:"Haute-Savoie"},{num:"75",nom:"Paris"},{num:"76",nom:"Seine-Maritime"},{num:"77",nom:"Seine-et-Marne"},{num:"78",nom:"Yvelines"},{num:"79",nom:"Deux-Sèvres"},
+        {num:"80",nom:"Somme"},{num:"81",nom:"Tarn"},{num:"82",nom:"Tarn-et-Garonne"},{num:"83",nom:"Var"},{num:"84",nom:"Vaucluse"},{num:"85",nom:"Vendée"},{num:"86",nom:"Vienne"},{num:"87",nom:"Haute-Vienne"},{num:"88",nom:"Vosges"},{num:"89",nom:"Yonne"},
+        {num:"90",nom:"Territoire de Belfort"},{num:"91",nom:"Essonne"},{num:"92",nom:"Hauts-de-Seine"},{num:"93",nom:"Seine-Saint-Denis"},{num:"94",nom:"Val-de-Marne"},{num:"95",nom:"Val-d'Oise"}
+    ];
+
+    let currentQuestion = 0, score = 0, questions = [], timerInterval, timeLeft;
+
+    function startGame() {
+        currentQuestion = 0; score = 0;
+        document.getElementById('home-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        document.getElementById('result-screen').classList.add('hidden');
+        document.getElementById('score-display').innerText = `Score: 0`;
+        
+        let shuffled = [...departements].sort(() => 0.5 - Math.random());
+        questions = shuffled.slice(0, 20).map(d => {
+            const type = Math.random() > 0.5 ? 'nom' : 'num';
+            return { target: d, type, options: generateOptions(d, type) };
+        });
+        showQuestion();
+    }
+
+    function generateOptions(correct, type) {
+        let opts = [correct];
+        while(opts.length < 3) {
+            let r = departements[Math.floor(Math.random() * departements.length)];
+            if(!opts.find(o => o.num === r.num)) opts.push(r);
+        }
+        return opts.sort(() => 0.5 - Math.random());
+    }
+
+    function showQuestion() {
+        if(currentQuestion >= 20) { clearInterval(timerInterval); showResults(); return; }
+        const q = questions[currentQuestion];
+        const container = document.getElementById('options-container');
+        document.getElementById('progress').innerText = `${currentQuestion + 1} / 20`;
+        container.innerHTML = '';
+        
+        document.getElementById('question-text').innerText = q.type === 'nom' ? 
+            `Département n° ${q.target.num} ?` : `Quel numéro pour : ${q.target.nom} ?`;
+
+        q.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.innerText = q.type === 'nom' ? opt.nom : opt.num;
+            btn.onclick = () => handleAnswer(btn, opt.num === q.target.num);
+            container.appendChild(btn);
+        });
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 50; 
+        const bar = document.getElementById('timer-bar');
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            bar.style.width = (timeLeft * 2) + '%';
+            bar.style.background = timeLeft < 20 ? 'var(--error)' : 'var(--success)';
+            if(timeLeft <= 0) { handleAnswer(null, false); }
+        }, 100);
+    }
+
+    function handleAnswer(btn, isCorrect) {
+        clearInterval(timerInterval);
+        const buttons = document.querySelectorAll('.options button');
+        buttons.forEach(b => b.disabled = true);
+        const q = questions[currentQuestion];
+        const correctVal = q.type === 'nom' ? q.target.nom : q.target.num;
+
+        if(isCorrect) { btn.classList.add('correct'); score++; } 
+        else {
+            if(btn) btn.classList.add('wrong');
+            buttons.forEach(b => { if(b.innerText === correctVal) b.classList.add('correct'); });
+        }
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+        setTimeout(() => { currentQuestion++; showQuestion(); }, 1200);
+    }
+
+    function showResults() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        let title, msg, reward = "";
+        if(score === 20) { title = "⭐ PARFAIT ⭐"; msg = "Tu es le meilleur de l'ENC !"; reward = "<div class='reward'>Montre cet écran à maman : tu as gagné 15min d'ordi ! 💻</div>"; }
+        else if(score >= 15) { title = "Bien joué !"; msg = "Tu tiens le bon bout Aymerico !"; }
+        else if(score >= 10) { title = "Pas mal"; msg = "Peut mieux faire !"; }
+        else { title = "Eh Oh !"; msg = "On se réveille mon lapin !"; }
+
+        document.getElementById('result-content').innerHTML = `<h2>${score}/20</h2><h3>${title}</h3><p>${msg}</p>${reward}`;
+    }
+
+    function resetToHome() {
+        clearInterval(timerInterval);
+        document.getElementById('home-screen').classList.remove('hidden');
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.add('hidden');
+    }
+</script>
+</body>
+</html>

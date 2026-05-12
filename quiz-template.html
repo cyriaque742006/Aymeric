@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAVAA Academy - Quiz</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <h1 id="game-title">Chargement...</h1>
+        
+        <div id="quiz-screen">
+            <div class="stats">
+                <span id="progress"></span>
+                <span id="score-display">Score: 0</span>
+            </div>
+            <div id="timer-container"><div id="timer-bar"></div></div>
+            <div id="question-text" class="question-box"></div>
+            <div id="options-container" class="options"></div>
+        </div>
+
+        <div id="result-screen" class="hidden"></div>
+    </div>
+
+    <script src="engine.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const game = urlParams.get('game');
+        const script = document.createElement('script');
+        script.src = `apps/${game}.js`;
+        script.onload = () => {
+            document.getElementById('game-title').innerText = gameData.title;
+            initGame();
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

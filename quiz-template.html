@@ -3,37 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BAVAA Academy - Quiz</title>
+    <title>Quiz - BAVAA Academy</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app">
-        <h1 id="game-title">Chargement...</h1>
-        
         <div id="quiz-screen">
             <div class="stats">
-                <span id="progress"></span>
+                <span id="progress">1 / 20</span>
                 <span id="score-display">Score: 0</span>
             </div>
             <div id="timer-container"><div id="timer-bar"></div></div>
-            <div id="question-text" class="question-box"></div>
-            <div id="options-container" class="options"></div>
+            <div class="question-box" id="question-text">Chargement...</div>
+            <div class="options" id="options-container"></div>
         </div>
 
-        <div id="result-screen" class="hidden"></div>
+        <div id="result-screen" class="hidden">
+            <!-- Rempli par le JS -->
+        </div>
     </div>
 
     <script src="engine.js"></script>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const game = urlParams.get('game');
+        const gameName = urlParams.get('game');
         const script = document.createElement('script');
-        script.src = `apps/${game}.js`;
-        script.onload = () => {
-            document.getElementById('game-title').innerText = gameData.title;
-            initGame();
-        };
-        document.head.appendChild(script);
+        script.src = `apps/${gameName}.js`;
+        script.onload = () => initGame();
+        document.body.appendChild(script);
     </script>
 </body>
 </html>

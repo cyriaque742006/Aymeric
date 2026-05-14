@@ -1,0 +1,51 @@
+const gameData = {
+    title: "Mots-Outils CP",
+    timerLimit: 100, // 10 secondes
+    questions: []
+};
+
+// Liste des mots outils du CP (tu peux en ajouter autant que tu veux)
+const motsOutils = [
+    "un portail", "cette bouteille", "une paille", "travailler", "la maîtresse", "une grille", "des conseils"
+];
+
+function genererFauxMotProche(mot) {
+    let optionsPossibles = [];
+    
+    // Piège 1 : Doublement de la dernière lettre
+    optionsPossibles.push(mot + mot.slice(-1));
+    
+    // Piège 2 : Changement de la voyelle principale
+    const voyelles = ['a', 'e', 'i', 'o', 'u'];
+    let arr = mot.split('');
+    for (let i = 0; i < arr.length; i++) {
+        if (voyelles.includes(arr[i])) {
+            let v = voyelles.find(val => val !== arr[i]);
+            arr[i] = v;
+            optionsPossibles.push(arr.join(''));
+            break;
+        }
+    }
+
+    // Piège 3 : Ajout d'un 's' ou d'un 'e' muet
+    optionsPossibles.push(mot.endsWith('s') ? mot.slice(0, -1) : mot + 's');
+    optionsPossibles.push(mot.endsWith('e') ? mot.slice(0, -1) : mot + 'e');
+
+    // On mélange et on renvoie un truc qui n'est pas le mot original
+    return optionsPossibles.filter(m => m !== mot).sort(() => 0.5 - Math.random())[0];
+}
+
+motsOutils.forEach(mot => {
+    let options = new Set([mot]);
+    
+    while(options.size < 3) {
+        let fake = genererFauxMotProche(mot);
+        if (fake && fake !== mot) options.add(fake);
+    }
+
+    gameData.questions.push({
+        q: `Trouve le mot : **${mot}**`,
+        a: mot,
+        options: Array.from(options)
+    });
+});
